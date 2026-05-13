@@ -1,0 +1,5 @@
+INSERT INTO doctor_schedules (doctor_id, day_of_week, start_time, end_time, slot_duration_minutes, is_active) VALUES ('b2f5d94e-1234-4567-89ab-cdef01234567', 'MONDAY', '09:00:00', '17:00:00', 30, TRUE) ON CONFLICT DO NOTHING;
+INSERT INTO doctor_schedules (doctor_id, day_of_week, start_time, end_time, slot_duration_minutes, is_active) VALUES ('b2f5d94e-1234-4567-89ab-cdef01234567', 'TUESDAY', '09:00:00', '17:00:00', 30, TRUE) ON CONFLICT DO NOTHING;
+INSERT INTO doctor_schedules (doctor_id, day_of_week, start_time, end_time, slot_duration_minutes, is_active) VALUES ('b2f5d94e-1234-4567-89ab-cdef01234567', 'WEDNESDAY', '09:00:00', '17:00:00', 30, TRUE) ON CONFLICT DO NOTHING;
+INSERT INTO doctor_schedules (doctor_id, day_of_week, start_time, end_time, slot_duration_minutes, is_active) VALUES ('b2f5d94e-1234-4567-89ab-cdef01234567', 'THURSDAY', '09:00:00', '17:00:00', 30, TRUE) ON CONFLICT DO NOTHING;
+INSERT INTO doctor_schedules (doctor_id, day_of_week, start_time, end_time, slot_duration_minutes, is_active) VALUES ('b2f5d94e-1234-4567-89ab-cdef01234567', 'FRIDAY', '09:00:00', '17:00:00', 30, TRUE) ON CONFLICT DO NOTHING;
