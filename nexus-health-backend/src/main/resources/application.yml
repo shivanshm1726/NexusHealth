@@ -1,3 +1,7 @@
+agora:
+  app-id: "e75b5905a0404baea80eabe3aedafa47"
+  app-certificate: "c270d3c7e1dd4c3691d40dc391b7bfd5"
+
 spring:
   application:
     name: nexus-health-backend

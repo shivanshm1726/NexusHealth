@@ -66,6 +66,12 @@
             <artifactId>razorpay-java</artifactId>
             <version>1.4.6</version>
         </dependency>
+        <!-- Commons Codec for Agora Token Generation -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.16.0</version>
+        </dependency>
 
         <!-- JWT (jjwt library — industry standard for Java JWT) -->
         <dependency>

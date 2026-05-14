@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import Script from "next/script";
+import Link from "next/link";
 import api from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { CalendarDays, Clock, Video, MapPin, IndianRupee, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -100,6 +101,11 @@ export default function AppointmentsPage() {
               <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600" onClick={() => handlePayment(apt)} disabled={payingId === apt.id}>
                 {payingId === apt.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Pay Now"}
               </Button>
+            )}
+            {apt.status==="CONFIRMED"&&apt.type==="ONLINE"&& (
+              <Link href={`/consultation/${apt.id}`} className={buttonVariants({ size: "sm", className: "bg-blue-600 hover:bg-blue-700 text-white" })}>
+                <Video className="w-4 h-4 mr-2" />Join Call
+              </Link>
             )}
             {apt.status!=="COMPLETED"&&apt.status!=="CANCELLED"&&<Button size="sm" variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => handleCancel(apt.id)}>Cancel</Button>}
           </div>
