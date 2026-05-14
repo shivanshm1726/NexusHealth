@@ -8,16 +8,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -95,4 +91,69 @@ public class ChatController {
 
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * Returns patients sorted by most recent message.
+     * Patients with no messages appear at the bottom.
+     */
+    @GetMapping("/chat/users/patient/sorted")
+    public ResponseEntity<List<Map<String, Object>>> getPatientsSortedByLastMessage(Principal principal) {
+        User currentUser = userRepository.findByEmail(principal.getName()).orElseThrow();
+
+        // Get conversation partners sorted by last message timestamp
+        List<Object[]> sorted = chatMessageRepository.findConversationPartnersSorted(currentUser.getId());
+
+        // Build a map of partnerId -> lastMessageTime
+        Map<UUID, LocalDateTime> lastMessageMap = new LinkedHashMap<>();
+        for (Object[] row : sorted) {
+            UUID partnerId = (UUID) row[0];
+            LocalDateTime lastMsg = (LocalDateTime) row[1];
+            lastMessageMap.put(partnerId, lastMsg);
+        }
+
+        // Get all patients
+        List<User> allPatients = userRepository.findAll().stream()
+                .filter(u -> u.getRole().name().equalsIgnoreCase("PATIENT"))
+                .collect(Collectors.toList());
+
+        // Split into patients with messages (sorted) and without
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        // First: patients who have messages, sorted by recency
+        for (UUID partnerId : lastMessageMap.keySet()) {
+            allPatients.stream()
+                .filter(p -> p.getId().equals(partnerId))
+                .findFirst()
+                .ifPresent(p -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", p.getId().toString());
+                    map.put("fullName", p.getFullName());
+                    map.put("lastMessageTime", lastMessageMap.get(p.getId()).toString());
+                    result.add(map);
+                });
+        }
+
+        // Then: patients with no messages
+        Set<UUID> withMessages = lastMessageMap.keySet();
+        allPatients.stream()
+            .filter(p -> !withMessages.contains(p.getId()))
+            .forEach(p -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", p.getId().toString());
+                map.put("fullName", p.getFullName());
+                map.put("lastMessageTime", null);
+                result.add(map);
+            });
+
+        return ResponseEntity.ok(result);
+    }
+
+    @DeleteMapping("/chat/conversation/{partnerId}")
+    @Transactional
+    public ResponseEntity<Map<String, String>> deleteConversation(@PathVariable UUID partnerId, Principal principal) {
+        User currentUser = userRepository.findByEmail(principal.getName()).orElseThrow();
+        chatMessageRepository.deleteConversation(currentUser.getId(), partnerId);
+        return ResponseEntity.ok(Map.of("message", "Conversation deleted successfully"));
+    }
 }
+
