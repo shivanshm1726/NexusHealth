@@ -104,10 +104,10 @@ public class ChatController {
         List<Object[]> sorted = chatMessageRepository.findConversationPartnersSorted(currentUser.getId());
 
         // Build a map of partnerId -> lastMessageTime
-        Map<UUID, LocalDateTime> lastMessageMap = new LinkedHashMap<>();
+        Map<UUID, String> lastMessageMap = new LinkedHashMap<>();
         for (Object[] row : sorted) {
             UUID partnerId = (UUID) row[0];
-            LocalDateTime lastMsg = (LocalDateTime) row[1];
+            String lastMsg = row[1].toString();
             lastMessageMap.put(partnerId, lastMsg);
         }
 
