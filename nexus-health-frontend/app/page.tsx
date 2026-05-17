@@ -13,12 +13,7 @@ const features = [
   { icon: HeartPulse, title: "Health Dashboard", desc: "Track your consultation history, prescriptions, and upcoming appointments." },
 ];
 
-const stats = [
-  { value: "50+", label: "Specialist Doctors" },
-  { value: "10K+", label: "Patients Served" },
-  { value: "99.9%", label: "Uptime Guarantee" },
-  { value: "4.9★", label: "Patient Rating" },
-];
+
 
 const steps = [
   { num: "01", title: "Find a Doctor", desc: "Browse our network of verified specialists by name or specialization." },
@@ -34,10 +29,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-blue-600 flex items-center justify-center">
-              <Activity className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-slate-900">NexusHealth</span>
+            <img src="/logo.png" alt="NexusHealth Logo" className="h-10 w-auto object-contain" />
           </Link>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500">
             <a href="#features" className="hover:text-blue-600 transition-colors">Features</a>
@@ -125,16 +117,7 @@ export default function LandingPage() {
             </motion.div>
           </div>
 
-          {/* Stats bar */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.6 }}
-            className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto">
-            {stats.map((s) => (
-              <div key={s.label} className="text-center">
-                <div className="text-3xl font-extrabold text-slate-900">{s.value}</div>
-                <div className="text-sm text-slate-400 mt-1 font-medium">{s.label}</div>
-              </div>
-            ))}
-          </motion.div>
+
         </div>
       </section>
 
@@ -235,10 +218,7 @@ export default function LandingPage() {
       <footer className="border-t border-slate-100 py-12 px-6 bg-white">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
-              <Activity className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-bold text-slate-900">NexusHealth</span>
+            <img src="/logo.png" alt="NexusHealth Logo" className="h-8 w-auto object-contain" />
           </div>
           <div className="flex items-center gap-6 text-sm text-slate-400">
             <a href="#features" className="hover:text-slate-600 transition-colors">Features</a>

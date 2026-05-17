@@ -28,10 +28,7 @@ export default function DashboardShell({ children, navItems }: { children: React
       <aside className="w-64 bg-white border-r border-slate-200/80 flex flex-col fixed h-full shadow-sm">
         <div className="p-5 border-b border-slate-100">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
-              <Activity className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-lg font-bold text-slate-900">NexusHealth</span>
+            <img src="/logo.png" alt="NexusHealth Logo" className="h-8 w-auto object-contain" />
           </Link>
         </div>
 

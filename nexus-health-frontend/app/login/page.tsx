@@ -28,10 +28,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSA2MCAwIEwgMCAwIDAgNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-40" />
         <div className="relative flex flex-col justify-center px-16 text-white">
           <div className="flex items-center gap-3 mb-12">
-            <div className="h-11 w-11 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center">
-              <Activity className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold">NexusHealth</span>
+            <img src="/logo.png" alt="NexusHealth Logo" className="h-12 w-auto object-contain bg-white/80 p-2 rounded-xl backdrop-blur" />
           </div>
           <h2 className="text-4xl font-extrabold leading-tight mb-4">Welcome back to your health portal</h2>
           <p className="text-blue-100 text-lg mb-12 max-w-md">Access your appointments, consultations, and health records — all in one secure place.</p>
@@ -54,10 +51,7 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center px-6 py-12 bg-white">
         <div className="w-full max-w-[420px]">
           <div className="lg:hidden flex items-center justify-center gap-2.5 mb-10">
-            <div className="h-9 w-9 rounded-xl bg-blue-600 flex items-center justify-center">
-              <Activity className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-slate-900">NexusHealth</span>
+            <img src="/logo.png" alt="NexusHealth Logo" className="h-10 w-auto object-contain" />
           </div>
 
           <div className="mb-8">
