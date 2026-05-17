@@ -6,17 +6,20 @@ spring:
   application:
     name: nexus-health-backend
 
-  # Database
+  # Database — uses env vars in production (Neon), falls back to local
   datasource:
-    url: jdbc:postgresql://localhost:5432/nexushealth
-    username: ${DB_USERNAME:shivanshmishra}
-    password: ${DB_PASSWORD:}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/nexushealth}
+    username: ${SPRING_DATASOURCE_USERNAME:shivanshmishra}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 5 # keep low for free-tier DB limits
 
   # JPA / Hibernate
   jpa:
     hibernate:
-      ddl-auto: validate  # Flyway manages schema; Hibernate only validates
+      ddl-auto: validate # Flyway manages schema; Hibernate only validates
     show-sql: false
     properties:
       hibernate:
@@ -33,8 +36,8 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET:nexushealth-dev-secret-key-change-in-production-minimum-256-bits-long}
-    access-token-expiration-ms: 900000      # 15 minutes
-    refresh-token-expiration-ms: 604800000  # 7 days
+    access-token-expiration-ms: 900000 # 15 minutes
+    refresh-token-expiration-ms: 604800000 # 7 days
 
 # Razorpay Configuration
 razorpay:
@@ -42,14 +45,14 @@ razorpay:
     id: ${RAZORPAY_KEY_ID:rzp_test_SmZMiBmGKl940G}
     secret: ${RAZORPAY_KEY_SECRET:78OfxMVzeETmoxHB64j1lltm}
 
-# Server
+# Server — Render injects $PORT dynamically
 server:
-  port: 8080
+  port: ${PORT:8080}
   servlet:
     context-path: /api
 
 # Logging
 logging:
   level:
-    com.nexushealth: DEBUG
-    org.springframework.security: INFO
+    com.nexushealth: INFO
+    org.springframework.security: WARN

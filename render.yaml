@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: nexushealth-backend
+    runtime: docker
+    dockerfilePath: ./nexus-health-backend/Dockerfile
+    dockerContext: ./nexus-health-backend
+    region: singapore          # closest to India
+    plan: free
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        sync: false            # you paste the Neon JDBC URL here in Render dashboard
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true    # Render auto-generates a strong secret
+      - key: FRONTEND_URL
+        sync: false            # paste your Vercel URL after frontend is deployed
