@@ -32,7 +32,8 @@ public class CorsConfig {
         List<String> origins = new ArrayList<>(List.of(
                 "http://localhost:3000",
                 "http://localhost:3001",
-                "http://localhost:3002"
+                "http://localhost:3002",
+                "https://*.vercel.app"
         ));
 
         // Add production Vercel URL if provided
@@ -41,7 +42,7 @@ public class CorsConfig {
         }
 
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(origins);
+        configuration.setAllowedOriginPatterns(origins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
