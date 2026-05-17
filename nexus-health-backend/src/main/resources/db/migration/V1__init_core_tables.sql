@@ -88,4 +88,4 @@ CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 
 -- Seed a default admin user (password: Admin@123, BCrypt-12 hashed)
 INSERT INTO users (email, password_hash, full_name, phone, role, is_active)
-VALUES ('admin@nexushealth.com', '$2a$12$LJ3a4FKHEQl9xqM5sBPPxOzQwTR5a/MWj6qXUkX5YxKxkqzHVZWHm', 'System Admin', '9999999999', 'ADMIN', TRUE);
+VALUES ('admin@nexushealth.com', '$2b$12$9S1SqQlBZvna26OBMD1IEOCi71o5kxhe7Up4hGJATyhypVfKF8Yi2', 'System Admin', '9999999999', 'ADMIN', TRUE);
