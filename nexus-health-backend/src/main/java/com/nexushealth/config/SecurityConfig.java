@@ -54,7 +54,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints (no JWT required)
                 .requestMatchers("/auth/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/doctors", "/doctors/**", "/ping").permitAll()
+                .requestMatchers("/ping").permitAll()
+                .requestMatchers(HttpMethod.GET, "/doctors", "/doctors/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
 
                 // Role-based endpoint protection
