@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useRef, useCallback } from "react";
-import api from "@/lib/api";
+import api, { getWsUrl } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,7 +44,7 @@ export default function ReceptionistChat() {
 
     const token = localStorage.getItem("accessToken");
     const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8080/api/ws"),
+      webSocketFactory: () => new SockJS(getWsUrl()),
       connectHeaders: { Authorization: `Bearer ${token}` },
       onConnect: () => {
         client.subscribe("/user/queue/messages", (message) => {

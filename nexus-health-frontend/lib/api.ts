@@ -46,4 +46,10 @@ api.interceptors.response.use(
   }
 );
 
+/** Derive the SockJS WebSocket URL from the same base used for REST calls. */
+export function getWsUrl(): string {
+  const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+  return `${base}/ws`;
+}
+
 export default api;
