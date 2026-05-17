@@ -203,7 +203,7 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
   if (!joined) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-gray-900 text-white">
-        <Loader2 className="h-10 w-10 animate-spin text-emerald-500 mb-4" />
+        <Loader2 className="h-10 w-10 animate-spin text-blue-500 mb-4" />
         <p className="text-gray-400">Connecting to secure server...</p>
       </div>
     );

@@ -72,29 +72,29 @@ export default function AdminDoctors() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-white mb-8">Manage Doctors</h1>
+      <h1 className="text-2xl font-bold text-slate-900 mb-8">Manage Doctors</h1>
 
       {/* Pending Approvals */}
       {p.length > 0 && (
-        <Card className="bg-slate-900/50 border-slate-800 mb-6">
-          <CardHeader>
-            <CardTitle className="text-white">Pending ({p.length})</CardTitle>
+        <Card className="bg-white border-slate-200/80 shadow-sm mb-6">
+          <CardHeader className="border-b border-slate-100">
+            <CardTitle className="text-slate-900">Pending ({p.length})</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="p-6 space-y-3">
             {p.map((doc) => (
               <div
                 key={doc.id}
-                className="flex items-center justify-between p-4 rounded-lg bg-amber-500/5 border border-amber-500/20"
+                className="flex items-center justify-between p-4 rounded-xl bg-amber-50/50 border border-amber-100"
               >
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10 bg-amber-500/20">
-                    <AvatarFallback className="text-amber-400">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-amber-100 text-amber-600 font-semibold">
                       {doc.fullName?.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium text-white">{doc.fullName}</p>
-                    <p className="text-sm text-slate-400">
+                    <p className="font-medium text-slate-900">{doc.fullName}</p>
+                    <p className="text-sm text-slate-500">
                       {doc.specialization}
                     </p>
                   </div>
@@ -102,7 +102,7 @@ export default function AdminDoctors() {
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm font-medium"
                     onClick={() => approve(doc.id)}
                   >
                     <Check className="h-4 w-4 mr-1" />
@@ -111,7 +111,7 @@ export default function AdminDoctors() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                    className="border-red-200 text-red-500 hover:bg-red-50 font-medium"
                     onClick={() =>
                       setDialog({ open: true, type: "reject", doc })
                     }
@@ -127,13 +127,13 @@ export default function AdminDoctors() {
       )}
 
       {/* Approved Doctors */}
-      <Card className="bg-slate-900/50 border-slate-800">
-        <CardHeader>
-          <CardTitle className="text-white">Approved ({a.length})</CardTitle>
+      <Card className="bg-white border-slate-200/80 shadow-sm">
+        <CardHeader className="border-b border-slate-100">
+          <CardTitle className="text-slate-900">Approved ({a.length})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {a.length === 0 ? (
-            <p className="text-slate-500 text-center py-6">
+            <p className="text-slate-400 text-center py-6">
               No approved doctors
             </p>
           ) : (
@@ -141,29 +141,29 @@ export default function AdminDoctors() {
               {a.map((doc) => (
                 <div
                   key={doc.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-slate-800/30 border border-slate-800"
+                  className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100"
                 >
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 bg-emerald-500/20">
-                      <AvatarFallback className="text-emerald-400">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-blue-50 text-blue-600 font-semibold">
                         {doc.fullName?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium text-white">{doc.fullName}</p>
-                      <p className="text-sm text-slate-400">
+                      <p className="font-medium text-slate-900">{doc.fullName}</p>
+                      <p className="text-sm text-slate-500">
                         {doc.specialization}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Badge className="bg-emerald-500/10 text-emerald-400 border-0">
+                    <Badge className="bg-emerald-50 text-emerald-600 border-0 font-medium">
                       Active
                     </Badge>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                      className="border-red-200 text-red-500 hover:bg-red-50 font-medium"
                       onClick={() =>
                         setDialog({ open: true, type: "delete", doc })
                       }
@@ -187,27 +187,27 @@ export default function AdminDoctors() {
         }
       >
         <DialogContent
-          className="bg-slate-900 border-slate-700 text-white max-w-md"
+          className="bg-white border-slate-200 text-slate-900 max-w-md"
           showCloseButton={false}
         >
           <DialogHeader>
             <div className="flex items-center gap-3 mb-1">
-              <div className="p-2 rounded-full bg-red-500/10">
-                <AlertTriangle className="h-5 w-5 text-red-400" />
+              <div className="p-2 rounded-full bg-red-50">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
               </div>
-              <DialogTitle className="text-white text-base">
+              <DialogTitle className="text-slate-900 text-base">
                 {dialog.type === "reject"
                   ? "Reject Application"
                   : "Delete Doctor"}
               </DialogTitle>
             </div>
-            <DialogDescription className="text-slate-400 pl-1">
+            <DialogDescription className="text-slate-500 pl-1">
               {dialog.type === "reject" ? (
                 <>
                   Are you sure you want to{" "}
-                  <span className="text-red-400 font-medium">reject</span> the
+                  <span className="text-red-500 font-medium">reject</span> the
                   application from{" "}
-                  <span className="text-white font-medium">
+                  <span className="text-slate-900 font-medium">
                     {dialog.doc?.fullName}
                   </span>
                   ? Their doctor profile will be removed. Their user account
@@ -216,8 +216,8 @@ export default function AdminDoctors() {
               ) : (
                 <>
                   Are you sure you want to{" "}
-                  <span className="text-red-400 font-medium">delete</span>{" "}
-                  <span className="text-white font-medium">
+                  <span className="text-red-500 font-medium">delete</span>{" "}
+                  <span className="text-slate-900 font-medium">
                     {dialog.doc?.fullName}
                   </span>
                   ? They will be deactivated and can no longer log in. All
@@ -226,10 +226,10 @@ export default function AdminDoctors() {
               )}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="bg-transparent border-t-slate-700 mt-2">
+          <DialogFooter className="mt-2">
             <Button
               variant="outline"
-              className="border-slate-700 text-slate-300 hover:bg-slate-800"
+              className="border-slate-200 text-slate-700 hover:bg-slate-50"
               onClick={() => setDialog({ open: false, type: null, doc: null })}
               disabled={loading}
             >

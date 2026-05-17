@@ -20,32 +20,29 @@ export default function AdminDashboard() {
   }, []);
 
   const stats = [
-    { l: "Users", v: s.users, i: Users, c: "text-emerald-400" },
-    { l: "Doctors", v: s.doctors, i: Stethoscope, c: "text-cyan-400" },
-    {
-      l: "Appointments",
-      v: s.appointments,
-      i: CalendarDays,
-      c: "text-violet-400",
-    },
+    { l: "Users", v: s.users, i: Users, color: "blue" },
+    { l: "Doctors", v: s.doctors, i: Stethoscope, color: "emerald" },
+    { l: "Appointments", v: s.appointments, i: CalendarDays, color: "violet" },
     {
       l: "Total Revenue",
       v: `₹${Number(s.revenue).toLocaleString("en-IN")}`,
       i: IndianRupee,
-      c: "text-amber-400",
+      color: "amber",
     },
   ];
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-white mb-8">Admin Dashboard</h1>
+      <h1 className="text-2xl font-bold text-slate-900 mb-8">Admin Dashboard</h1>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((c) => (
-          <Card key={c.l} className="bg-slate-900/50 border-slate-800">
+          <Card key={c.l} className="bg-white border-slate-200/80 shadow-sm">
             <CardContent className="p-6">
-              <c.i className={`h-8 w-8 ${c.c} mb-2`} />
-              <p className="text-2xl font-bold text-white">{c.v}</p>
-              <p className="text-sm text-slate-400">{c.l}</p>
+              <div className={`h-10 w-10 rounded-xl bg-${c.color}-50 flex items-center justify-center mb-3`}>
+                <c.i className={`h-5 w-5 text-${c.color}-600`} />
+              </div>
+              <p className="text-2xl font-bold text-slate-900">{c.v}</p>
+              <p className="text-sm text-slate-500">{c.l}</p>
             </CardContent>
           </Card>
         ))}

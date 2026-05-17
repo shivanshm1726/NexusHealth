@@ -50,7 +50,7 @@ export default function AppointmentsPage() {
           email: "patient@example.com",
           contact: "9999999999",
         },
-        theme: { color: "#10b981" }, // emerald-500
+        theme: { color: "#2563EB" },
       };
 
       const rzp = new (window as any).Razorpay(options);
@@ -75,42 +75,59 @@ export default function AppointmentsPage() {
     }
   };
 
-  const sc: Record<string,string> = { PENDING_PAYMENT:"bg-amber-500/10 text-amber-400", CONFIRMED:"bg-emerald-500/10 text-emerald-400", IN_PROGRESS:"bg-blue-500/10 text-blue-400", COMPLETED:"bg-slate-500/10 text-slate-400", CANCELLED:"bg-red-500/10 text-red-400" };
+  const sc: Record<string,string> = {
+    PENDING_PAYMENT: "bg-amber-50 text-amber-600",
+    CONFIRMED: "bg-emerald-50 text-emerald-600",
+    IN_PROGRESS: "bg-blue-50 text-blue-600",
+    COMPLETED: "bg-slate-100 text-slate-500",
+    CANCELLED: "bg-red-50 text-red-500"
+  };
 
   return (
     <div>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
-      <h1 className="text-3xl font-bold text-white mb-8">My Appointments</h1>
-      {a.length === 0 ? <div className="text-center py-20"><CalendarDays className="h-12 w-12 text-slate-700 mx-auto mb-3" /><p className="text-slate-400">No appointments yet</p></div> :
-      <div className="space-y-4">{a.map(apt => (
-        <Card key={apt.id} className="bg-slate-900/50 border-slate-800"><CardContent className="p-6 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <h3 className="font-semibold text-white">{apt.reason}</h3>
-              <Badge className={`${sc[apt.status]||""} border-0`}>{apt.status}</Badge>
-              <Badge variant="outline" className="border-slate-700 text-slate-400">{apt.type==="ONLINE"?<><Video className="h-3 w-3 mr-1"/>Online</>:<><MapPin className="h-3 w-3 mr-1"/>Offline</>}</Badge>
-            </div>
-            <div className="flex items-center gap-4 text-sm text-slate-400 mt-1">
-              <span className="flex items-center gap-1"><CalendarDays className="h-3 w-3"/>{apt.appointmentDate}</span>
-              <span className="flex items-center gap-1"><Clock className="h-3 w-3"/>{apt.timeSlot}</span>
-              <span className="flex items-center gap-1"><IndianRupee className="h-3 w-3"/>{apt.amount}</span>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            {apt.status==="PENDING_PAYMENT"&& (
-              <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600" onClick={() => handlePayment(apt)} disabled={payingId === apt.id}>
-                {payingId === apt.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Pay Now"}
-              </Button>
-            )}
-            {apt.status==="CONFIRMED"&&apt.type==="ONLINE"&& (
-              <Link href={`/consultation/${apt.id}`} className={buttonVariants({ size: "sm", className: "bg-blue-600 hover:bg-blue-700 text-white" })}>
-                <Video className="w-4 h-4 mr-2" />Join Call
-              </Link>
-            )}
-            {apt.status!=="COMPLETED"&&apt.status!=="CANCELLED"&&<Button size="sm" variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => handleCancel(apt.id)}>Cancel</Button>}
-          </div>
-        </CardContent></Card>
-      ))}</div>}
+      <h1 className="text-2xl font-bold text-slate-900 mb-8">My Appointments</h1>
+      {a.length === 0 ? (
+        <div className="text-center py-20">
+          <CalendarDays className="h-12 w-12 text-slate-200 mx-auto mb-3" />
+          <p className="text-slate-500">No appointments yet</p>
+        </div>
+      ) : (
+        <div className="space-y-4">{a.map(apt => (
+          <Card key={apt.id} className="bg-white border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-6 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <h3 className="font-semibold text-slate-900">{apt.reason}</h3>
+                  <Badge className={`${sc[apt.status]||""} border-0 font-medium`}>{apt.status}</Badge>
+                  <Badge variant="outline" className="border-slate-200 text-slate-500 font-medium">
+                    {apt.type==="ONLINE"?<><Video className="h-3 w-3 mr-1"/>Online</>:<><MapPin className="h-3 w-3 mr-1"/>Offline</>}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
+                  <span className="flex items-center gap-1"><CalendarDays className="h-3 w-3"/>{apt.appointmentDate}</span>
+                  <span className="flex items-center gap-1"><Clock className="h-3 w-3"/>{apt.timeSlot}</span>
+                  <span className="flex items-center gap-1"><IndianRupee className="h-3 w-3"/>{apt.amount}</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {apt.status==="PENDING_PAYMENT"&& (
+                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm font-medium" onClick={() => handlePayment(apt)} disabled={payingId === apt.id}>
+                    {payingId === apt.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Pay Now"}
+                  </Button>
+                )}
+                {apt.status==="CONFIRMED"&&apt.type==="ONLINE"&& (
+                  <Link href={`/consultation/${apt.id}`} className={buttonVariants({ size: "sm", className: "bg-blue-600 hover:bg-blue-700 text-white shadow-sm font-medium" })}>
+                    <Video className="w-4 h-4 mr-2" />Join Call
+                  </Link>
+                )}
+                {apt.status!=="COMPLETED"&&apt.status!=="CANCELLED"&&
+                  <Button size="sm" variant="outline" className="border-red-200 text-red-500 hover:bg-red-50 font-medium" onClick={() => handleCancel(apt.id)}>Cancel</Button>}
+              </div>
+            </CardContent>
+          </Card>
+        ))}</div>
+      )}
     </div>
   );
 }

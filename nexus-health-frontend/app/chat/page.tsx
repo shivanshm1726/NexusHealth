@@ -67,28 +67,38 @@ export default function PatientChat() {
     setContent("");
   };
 
-  if (!supportId) return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-emerald-500"/></div>;
+  if (!supportId) return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-blue-600"/></div>;
 
   return (
     <div className="h-[80vh] flex flex-col">
-      <h1 className="text-2xl font-bold text-white mb-4">Chat Support</h1>
-      <Card className="bg-slate-900/50 border-slate-800 flex-1 flex flex-col overflow-hidden">
-        <CardContent className="p-4 flex-1 flex flex-col gap-4 overflow-y-auto">
-          {messages.length === 0 ? <p className="text-center text-slate-500 my-auto">Start the conversation</p> :
+      <h1 className="text-2xl font-bold text-slate-900 mb-4">Chat Support</h1>
+      <Card className="bg-white border-slate-200/80 shadow-sm flex-1 flex flex-col overflow-hidden">
+        <CardContent className="p-4 flex-1 flex flex-col gap-3 overflow-y-auto">
+          {messages.length === 0 ? <p className="text-center text-slate-400 my-auto">Start the conversation</p> :
             messages.map((m, i) => (
               <div key={i} className={`flex ${m.senderId === user?.id ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[70%] rounded-2xl px-4 py-2 ${m.senderId === user?.id ? "bg-emerald-500 text-white rounded-tr-none" : "bg-slate-800 text-slate-200 rounded-tl-none"}`}>
-                  <p>{m.content}</p>
-                  <p className="text-[10px] opacity-70 mt-1 text-right">{new Date(m.timestamp).toLocaleTimeString()}</p>
+                <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${
+                  m.senderId === user?.id
+                    ? "bg-blue-600 text-white rounded-br-md"
+                    : "bg-slate-100 text-slate-800 rounded-bl-md"
+                }`}>
+                  <p className="text-sm">{m.content}</p>
+                  <p className={`text-[10px] mt-1 text-right ${m.senderId === user?.id ? "text-blue-200" : "text-slate-400"}`}>
+                    {new Date(m.timestamp).toLocaleTimeString()}
+                  </p>
                 </div>
               </div>
             ))
           }
           <div ref={messagesEndRef} />
         </CardContent>
-        <div className="p-4 bg-slate-800/50 border-t border-slate-800 flex gap-2">
-          <Input value={content} onChange={e=>setContent(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMessage()} placeholder="Type a message..." className="bg-slate-900/50 border-slate-700 text-white" />
-          <Button onClick={sendMessage} className="bg-emerald-500 hover:bg-emerald-600"><Send className="h-4 w-4" /></Button>
+        <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-2">
+          <Input value={content} onChange={e=>setContent(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMessage()}
+            placeholder="Type a message..."
+            className="bg-white border-slate-200 text-slate-900 focus:border-blue-500" />
+          <Button onClick={sendMessage} className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+            <Send className="h-4 w-4" />
+          </Button>
         </div>
       </Card>
     </div>
