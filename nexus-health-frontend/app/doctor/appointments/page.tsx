@@ -329,7 +329,7 @@ export default function DoctorAppointments() {
                             >
                               {saveLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : "💾 Save to Records"}
                             </Button>
-                          </div>>
+                          </div>
                         </div>
 
                         {/* SOAP Sections */}
