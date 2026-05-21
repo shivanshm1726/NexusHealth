@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const GEMINI_MODEL = "gemini-flash-latest";
+const GEMINI_MODEL = "gemini-2.5-flash-lite";
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const SYSTEM_PROMPT = `You are an AI medical triage assistant for NexusHealth, a hospital management platform.
@@ -12,7 +12,7 @@ Your job:
    GENERAL, CARDIOLOGY, DERMATOLOGY, GASTROENTEROLOGY, NEUROLOGY, ORTHOPEDICS, PEDIATRICS, PSYCHIATRY, GYNECOLOGY, OPHTHALMOLOGY, ENT, DENTISTRY, UROLOGY, PULMONOLOGY, ENDOCRINOLOGY
 4. Determine if the symptoms suggest a life-threatening emergency.
 
-You MUST respond with valid JSON only, no markdown, no code fences, no extra text. Use this exact structure:
+Respond with this JSON structure:
 {
   "analysis": "Your friendly 2-3 sentence summary here.",
   "specialty": "SPECIALIZATION_NAME",
@@ -62,6 +62,7 @@ export async function POST(request: Request) {
         generationConfig: {
           temperature: 0.3,
           maxOutputTokens: 300,
+          responseMimeType: "application/json",
         },
       }),
     });
@@ -93,7 +94,7 @@ export async function POST(request: Request) {
     const rawText =
       data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-    // Clean potential markdown code fences the model might add despite instructions
+    // Clean potential markdown code fences the model might add
     const cleaned = rawText
       .replace(/```json\s*/gi, "")
       .replace(/```\s*/g, "")
