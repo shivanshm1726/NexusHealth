@@ -6,7 +6,7 @@ const
 protectedPrefixes = ["/dashboard", "/doctor", "/receptionist", "/admin", "/appointments", "/chat", "/doctors"];
 const authRoutes = ["/login", "/register"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // Simple token presence check — actual validation happens server-side
   const hasToken = request.cookies.get("accessToken")?.value ||
