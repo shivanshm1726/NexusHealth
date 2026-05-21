@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const SYSTEM_PROMPT = `You are an AI medical triage assistant for NexusHealth, a hospital management platform.
 
@@ -37,10 +37,10 @@ export async function POST(request: Request) {
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error("GEMINI_API_KEY is not set in environment variables.");
+    if (!apiKey || apiKey === "your_free_api_key_from_google_ai_studio") {
+      console.error("GEMINI_API_KEY is not set or still has the placeholder value.");
       return NextResponse.json(
-        { error: "AI service is not configured. Please contact support." },
+        { error: "AI service is not configured. Please set the GEMINI_API_KEY environment variable." },
         { status: 500 }
       );
     }
@@ -68,9 +68,21 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error("Gemini API error:", response.status, errorData);
+      console.error(`Gemini API error [${response.status}]:`, errorData);
+
+      let userMessage = "AI service is temporarily unavailable. Please try again.";
+      if (response.status === 400) {
+        userMessage = "Invalid request to AI service. The API key may be incorrect.";
+      } else if (response.status === 403) {
+        userMessage = "AI API key is invalid or expired. Please check your GEMINI_API_KEY.";
+      } else if (response.status === 404) {
+        userMessage = `AI model '${GEMINI_MODEL}' not found. The model may have been updated.`;
+      } else if (response.status === 429) {
+        userMessage = "AI rate limit reached. Please wait a moment and try again.";
+      }
+
       return NextResponse.json(
-        { error: "AI service is temporarily unavailable. Please try again." },
+        { error: userMessage },
         { status: 502 }
       );
     }
