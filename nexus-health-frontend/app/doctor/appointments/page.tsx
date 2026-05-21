@@ -36,6 +36,23 @@ export default function DoctorAppointments() {
   const [scribeLoading, setScribeLoading] = useState(false);
   const [scribeError, setScribeError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
+
+  const saveSOAP = async (appointmentId: string) => {
+    if (!soapResult) return;
+    setSaveLoading(true);
+    try {
+      await api.patch(`/appointments/${appointmentId}/notes`, {
+        notes: JSON.stringify(soapResult)
+      });
+      toast.success("SOAP Note successfully saved to Patient Medical Records!");
+      setA(x => x.map(z => z.id === appointmentId ? { ...z, notes: JSON.stringify(soapResult) } : z));
+    } catch {
+      toast.error("Failed to save SOAP Note.");
+    } finally {
+      setSaveLoading(false);
+    }
+  };
 
   useEffect(() => {
     api
@@ -290,19 +307,29 @@ export default function DoctorAppointments() {
                           <p className="text-sm text-violet-700 font-medium">
                             📋 {soapResult.summary}
                           </p>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-violet-200 text-violet-600 hover:bg-violet-100 h-7 text-xs font-medium flex-shrink-0"
-                            onClick={copySOAP}
-                          >
-                            {copied ? (
-                              <Check className="h-3 w-3 mr-1" />
-                            ) : (
-                              <Copy className="h-3 w-3 mr-1" />
-                            )}
-                            {copied ? "Copied!" : "Copy All"}
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-violet-200 text-violet-600 hover:bg-violet-100 h-7 text-xs font-medium flex-shrink-0"
+                              onClick={copySOAP}
+                            >
+                              {copied ? (
+                                <Check className="h-3 w-3 mr-1" />
+                              ) : (
+                                <Copy className="h-3 w-3 mr-1" />
+                              )}
+                              {copied ? "Copied!" : "Copy All"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 text-xs font-medium flex-shrink-0"
+                              onClick={() => saveSOAP(apt.id)}
+                              disabled={saveLoading}
+                            >
+                              {saveLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : "💾 Save to Records"}
+                            </Button>
+                          </div>>
                         </div>
 
                         {/* SOAP Sections */}

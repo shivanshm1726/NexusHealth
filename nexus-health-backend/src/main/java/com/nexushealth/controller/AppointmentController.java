@@ -47,6 +47,12 @@ public class AppointmentController {
         return ResponseEntity.ok(Map.of("message", "Status updated"));
     }
 
+    @PatchMapping("/{id}/notes")
+    public ResponseEntity<Map<String, String>> updateNotes(@PathVariable UUID id, @RequestBody Map<String, String> body) {
+        appointmentService.updateNotes(id, body.get("notes"));
+        return ResponseEntity.ok(Map.of("message", "Notes updated successfully"));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> cancel(@PathVariable UUID id) {
         appointmentService.cancelAppointment(id);

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 export default function AppointmentsPage() {
   const [a, setA] = useState<any[]>([]);
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [expandedNotesId, setExpandedNotesId] = useState<string | null>(null);
 
   useEffect(() => { api.get("/appointments/my").then(r => setA(r.data)).catch(() => {}); }, []);
 
@@ -95,35 +96,94 @@ export default function AppointmentsPage() {
       ) : (
         <div className="space-y-4">{a.map(apt => (
           <Card key={apt.id} className="bg-white border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <h3 className="font-semibold text-slate-900">{apt.reason}</h3>
-                  <Badge className={`${sc[apt.status]||""} border-0 font-medium`}>{apt.status}</Badge>
-                  <Badge variant="outline" className="border-slate-200 text-slate-500 font-medium">
-                    {apt.type==="ONLINE"?<><Video className="h-3 w-3 mr-1"/>Online</>:<><MapPin className="h-3 w-3 mr-1"/>Offline</>}
-                  </Badge>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <h3 className="font-semibold text-slate-900">{apt.reason}</h3>
+                    <Badge className={`${sc[apt.status]||""} border-0 font-medium`}>{apt.status}</Badge>
+                    <Badge variant="outline" className="border-slate-200 text-slate-500 font-medium">
+                      {apt.type==="ONLINE"?<><Video className="h-3 w-3 mr-1"/>Online</>:<><MapPin className="h-3 w-3 mr-1"/>Offline</>}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
+                    <span className="flex items-center gap-1"><CalendarDays className="h-3 w-3"/>{apt.appointmentDate}</span>
+                    <span className="flex items-center gap-1"><Clock className="h-3 w-3"/>{apt.timeSlot}</span>
+                    <span className="flex items-center gap-1"><IndianRupee className="h-3 w-3"/>{apt.amount}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
-                  <span className="flex items-center gap-1"><CalendarDays className="h-3 w-3"/>{apt.appointmentDate}</span>
-                  <span className="flex items-center gap-1"><Clock className="h-3 w-3"/>{apt.timeSlot}</span>
-                  <span className="flex items-center gap-1"><IndianRupee className="h-3 w-3"/>{apt.amount}</span>
+                <div className="flex gap-2">
+                  {apt.status==="COMPLETED"&&apt.notes&& (
+                    <Button size="sm" variant="outline" className="border-violet-200 text-violet-600 hover:bg-violet-50 font-medium" onClick={() => setExpandedNotesId(expandedNotesId === apt.id ? null : apt.id)}>
+                      🩺 {expandedNotesId === apt.id ? "Hide Clinical Records" : "View Clinical Records"}
+                    </Button>
+                  )}
+                  {apt.status==="PENDING_PAYMENT"&& (
+                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm font-medium" onClick={() => handlePayment(apt)} disabled={payingId === apt.id}>
+                      {payingId === apt.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Pay Now"}
+                    </Button>
+                  )}
+                  {apt.status==="CONFIRMED"&&apt.type==="ONLINE"&& (
+                    <Link href={`/consultation/${apt.id}`} className={buttonVariants({ size: "sm", className: "bg-blue-600 hover:bg-blue-700 text-white shadow-sm font-medium" })}>
+                      <Video className="w-4 h-4 mr-2" />Join Call
+                    </Link>
+                  )}
+                  {apt.status!=="COMPLETED"&&apt.status!=="CANCELLED"&&
+                    <Button size="sm" variant="outline" className="border-red-200 text-red-500 hover:bg-red-50 font-medium" onClick={() => handleCancel(apt.id)}>Cancel</Button>}
                 </div>
               </div>
-              <div className="flex gap-2">
-                {apt.status==="PENDING_PAYMENT"&& (
-                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm font-medium" onClick={() => handlePayment(apt)} disabled={payingId === apt.id}>
-                    {payingId === apt.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Pay Now"}
-                  </Button>
-                )}
-                {apt.status==="CONFIRMED"&&apt.type==="ONLINE"&& (
-                  <Link href={`/consultation/${apt.id}`} className={buttonVariants({ size: "sm", className: "bg-blue-600 hover:bg-blue-700 text-white shadow-sm font-medium" })}>
-                    <Video className="w-4 h-4 mr-2" />Join Call
-                  </Link>
-                )}
-                {apt.status!=="COMPLETED"&&apt.status!=="CANCELLED"&&
-                  <Button size="sm" variant="outline" className="border-red-200 text-red-500 hover:bg-red-50 font-medium" onClick={() => handleCancel(apt.id)}>Cancel</Button>}
-              </div>
+              
+              {/* Expandable SOAP Note View */}
+              {expandedNotesId === apt.id && apt.notes && (() => {
+                try {
+                  const soap = JSON.parse(apt.notes);
+                  return (
+                    <div className="mt-5 p-5 rounded-2xl bg-gradient-to-br from-violet-50/50 via-white to-purple-50/50 border border-violet-100/60 shadow-inner grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
+                      <div className="col-span-full border-b border-violet-100 pb-3 flex justify-between items-center">
+                        <h4 className="font-semibold text-slate-800 text-sm flex items-center gap-2">
+                          📋 AI Medical Scribe Summaries
+                        </h4>
+                        <span className="text-[10px] font-bold text-violet-600 bg-violet-100/60 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                          Verified Records
+                        </span>
+                      </div>
+                      
+                      <div className="p-4 rounded-xl bg-white border border-slate-100 shadow-sm">
+                        <span className="text-xs font-bold uppercase tracking-wider text-blue-600">🗣️ Subjective (Your symptoms)</span>
+                        <p className="text-sm text-slate-600 mt-1 leading-relaxed">{soap.subjective}</p>
+                      </div>
+                      
+                      <div className="p-4 rounded-xl bg-white border border-slate-100 shadow-sm">
+                        <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">🔬 Objective (Clinical findings)</span>
+                        <p className="text-sm text-slate-600 mt-1 leading-relaxed">{soap.objective}</p>
+                      </div>
+                      
+                      <div className="p-4 rounded-xl bg-white border border-slate-100 shadow-sm">
+                        <span className="text-xs font-bold uppercase tracking-wider text-amber-600">🩺 Assessment (Doctor's diagnosis)</span>
+                        <p className="text-sm text-slate-600 mt-1 leading-relaxed">{soap.assessment}</p>
+                      </div>
+                      
+                      <div className="p-4 rounded-xl bg-white border border-slate-100 shadow-sm">
+                        <span className="text-xs font-bold uppercase tracking-wider text-violet-600">📝 Plan & Prescriptions (Next steps)</span>
+                        <p className="text-sm text-slate-600 mt-1 leading-relaxed">{soap.plan}</p>
+                      </div>
+
+                      {soap.summary && (
+                        <div className="col-span-full p-4 rounded-xl bg-violet-50/60 border border-violet-100/50 mt-1">
+                          <span className="text-xs font-bold text-violet-700">📌 Overview Summary:</span>
+                          <p className="text-sm text-slate-700 mt-1">{soap.summary}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                } catch (e) {
+                  return (
+                    <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500">
+                      📄 Physical Notes: {apt.notes}
+                    </div>
+                  );
+                }
+              })()}
             </CardContent>
           </Card>
         ))}</div>

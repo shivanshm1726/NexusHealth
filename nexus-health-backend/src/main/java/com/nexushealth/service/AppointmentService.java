@@ -134,6 +134,17 @@ public class AppointmentService {
         appointmentRepository.save(apt);
     }
 
+    @Transactional
+    public void updateNotes(UUID id, String notes) {
+        Appointment apt = appointmentRepository
+            .findById(id)
+            .orElseThrow(() ->
+                new ResourceNotFoundException("Appointment", "id", id)
+            );
+        apt.setNotes(notes);
+        appointmentRepository.save(apt);
+    }
+
     private Map<String, Object> toMap(Appointment a) {
         Map<String, Object> m = new HashMap<>();
         m.put("id", a.getId());
@@ -147,6 +158,7 @@ public class AppointmentService {
         m.put("reason", a.getReason());
         m.put("amount", a.getAmount());
         m.put("priority", a.getPriority());
+        m.put("notes", a.getNotes());
         return m;
     }
 }
