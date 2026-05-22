@@ -73,6 +73,13 @@
             <version>1.16.0</version>
         </dependency>
 
+        <!-- Google API Client for OAuth2 token verification -->
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+
         <!-- JWT (jjwt library — industry standard for Java JWT) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

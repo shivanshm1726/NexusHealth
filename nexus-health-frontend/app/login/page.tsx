@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -86,6 +87,40 @@ export default function LoginPage() {
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
             </Button>
           </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-slate-500">Or continue with</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-center">
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    try {
+                      await googleLogin(credentialResponse.credential);
+                      toast.success("Successfully logged in with Google!");
+                    } catch (err: any) {
+                      toast.error(err.response?.data?.message || "Google login failed");
+                    }
+                  }
+                }}
+                onError={() => {
+                  toast.error("Google Login Failed");
+                }}
+                useOneTap
+                theme="outline"
+                size="large"
+                shape="rectangular"
+                width="380"
+              />
+            </div>
+          </div>
 
           <p className="text-center text-sm text-slate-500 mt-8">
             Don&apos;t have an account?{" "}

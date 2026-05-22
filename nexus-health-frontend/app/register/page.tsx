@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function RegisterPage() {
-  const { register, registerDoctor } = useAuth();
+  const { register, registerDoctor, googleLogin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [pName, setPName] = useState(""); const [pEmail, setPEmail] = useState(""); const [pPassword, setPPassword] = useState(""); const [pPhone, setPPhone] = useState("");
   const [dName, setDName] = useState(""); const [dEmail, setDEmail] = useState(""); const [dPassword, setDPassword] = useState(""); const [dSpec, setDSpec] = useState(""); const [dQual, setDQual] = useState("");
@@ -100,6 +101,40 @@ export default function RegisterPage() {
               </form>
             </TabsContent>
           </Tabs>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-slate-500">Or continue with</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-center">
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    try {
+                      await googleLogin(credentialResponse.credential);
+                      toast.success("Successfully registered with Google!");
+                    } catch (err: any) {
+                      toast.error(err.response?.data?.message || "Google registration failed");
+                    }
+                  }
+                }}
+                onError={() => {
+                  toast.error("Google Registration Failed");
+                }}
+                useOneTap
+                theme="outline"
+                size="large"
+                shape="rectangular"
+                width="380"
+              />
+            </div>
+          </div>
 
           <p className="text-center text-sm text-slate-500 mt-8">
             Already have an account?{" "}

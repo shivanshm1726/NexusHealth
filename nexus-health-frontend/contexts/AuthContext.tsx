@@ -19,6 +19,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (data: { fullName: string; email: string; password: string; phone?: string }) => Promise<void>;
   registerDoctor: (data: { fullName: string; email: string; password: string; specialization: string; qualification?: string; consultationFee?: number }) => Promise<void>;
+  googleLogin: (token: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -72,6 +73,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/doctor/dashboard");
   };
 
+  const googleLogin = async (token: string) => {
+    const { data } = await api.post("/auth/google", { token });
+    saveAuth(data);
+    router.push(ROLE_DASHBOARDS[data.role as Role] || "/dashboard");
+  };
+
   const logout = () => {
     api.post("/auth/logout").catch(() => {});
     localStorage.removeItem("accessToken");
@@ -82,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, registerDoctor, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, login, register, registerDoctor, googleLogin, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

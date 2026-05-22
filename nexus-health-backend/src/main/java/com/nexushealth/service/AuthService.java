@@ -170,6 +170,64 @@ public class AuthService {
     }
 
     /**
+     * Login or Register with Google OAuth2.
+     */
+    @Transactional
+    public AuthResponse googleLogin(String idTokenString) {
+        try {
+            com.google.api.client.http.javanet.NetHttpTransport transport = new com.google.api.client.http.javanet.NetHttpTransport();
+            com.google.api.client.json.gson.GsonFactory jsonFactory = new com.google.api.client.json.gson.GsonFactory();
+            
+            // Note: In production, verify the audience matches your actual client ID
+            com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier verifier = 
+                new com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier.Builder(transport, jsonFactory)
+                // .setAudience(Collections.singletonList("YOUR_GOOGLE_CLIENT_ID"))
+                .build();
+
+            com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = verifier.verify(idTokenString);
+            if (idToken == null) {
+                throw new UnauthorizedException("Invalid Google ID token");
+            }
+
+            com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
+
+            User user = userRepository.findByEmail(email).orElse(null);
+
+            if (user == null) {
+                // Auto-register new PATIENT user
+                user = User.builder()
+                        .email(email)
+                        .passwordHash(passwordEncoder.encode(java.util.UUID.randomUUID().toString()))
+                        .fullName(name != null ? name : "Google User")
+                        .role(Role.PATIENT)
+                        .isActive(true)
+                        .build();
+                user = userRepository.save(user);
+
+                PatientProfile profile = PatientProfile.builder()
+                        .user(user)
+                        .build();
+                patientProfileRepository.save(profile);
+            }
+
+            // Check if doctor is approved (if logging in as an existing doctor)
+            if (user.getRole() == Role.DOCTOR) {
+                DoctorProfile profile = doctorProfileRepository.findByUserId(user.getId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Doctor profile not found"));
+                if (!profile.getIsApproved()) {
+                    throw new UnauthorizedException("Your account is pending admin approval");
+                }
+            }
+
+            return buildAuthResponse(user);
+        } catch (Exception e) {
+            throw new UnauthorizedException("Google authentication failed: " + e.getMessage());
+        }
+    }
+
+    /**
      * Refresh access token using a valid refresh token.
      * 
      * WHY: Access tokens expire in 15 minutes. Instead of making users

@@ -11,14 +11,21 @@ export const metadata: Metadata = {
   description: "Book appointments, consult doctors online, and manage your health — all in one place.",
 };
 
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Using a placeholder Client ID if NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
+
   return (
     <html lang="en">
       <body className={`${font.variable} font-sans antialiased bg-background text-foreground`}>
-        <AuthProvider>
-          {children}
-          <Toaster richColors position="top-right" />
-        </AuthProvider>
+        <GoogleOAuthProvider clientId={clientId}>
+          <AuthProvider>
+            {children}
+            <Toaster richColors position="top-right" />
+          </AuthProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );

@@ -69,6 +69,20 @@ public class AuthController {
     }
 
     /**
+     * POST /api/auth/google
+     * Login or register with Google OAuth2 ID Token.
+     */
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> googleLogin(@RequestBody Map<String, String> request) {
+        String token = request.get("token");
+        if (token == null || token.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        AuthResponse response = authService.googleLogin(token);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * POST /api/auth/refresh
      * Get new access token using refresh token.
      */
