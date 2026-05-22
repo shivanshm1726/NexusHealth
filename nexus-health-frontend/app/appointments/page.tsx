@@ -6,13 +6,32 @@ import api from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { CalendarDays, Clock, Video, MapPin, IndianRupee, Loader2 } from "lucide-react";
+import { CalendarDays, Clock, Video, MapPin, IndianRupee, Loader2, Pill, Sparkles, AlertTriangle, Lightbulb, Timer, ShieldAlert, Heart } from "lucide-react";
 import { toast } from "sonner";
+
+interface MedicationExplain {
+  name: string;
+  purpose: string;
+  dosage: string;
+  timing: string;
+  sideEffects: string;
+  advice: string;
+}
+
+interface ExplainResult {
+  medications: MedicationExplain[];
+  generalAdvice: string;
+}
 
 export default function AppointmentsPage() {
   const [a, setA] = useState<any[]>([]);
   const [payingId, setPayingId] = useState<string | null>(null);
   const [expandedNotesId, setExpandedNotesId] = useState<string | null>(null);
+
+  // Prescription Explainer state
+  const [explainLoadingId, setExplainLoadingId] = useState<string | null>(null);
+  const [explainResults, setExplainResults] = useState<Record<string, ExplainResult>>({});
+  const [showExplainId, setShowExplainId] = useState<string | null>(null);
 
   useEffect(() => { api.get("/appointments/my").then(r => setA(r.data)).catch(() => {}); }, []);
 
@@ -76,6 +95,39 @@ export default function AppointmentsPage() {
     }
   };
 
+  const decodePrescription = async (appointmentId: string, planText: string) => {
+    // If already decoded, just toggle visibility
+    if (explainResults[appointmentId]) {
+      setShowExplainId(showExplainId === appointmentId ? null : appointmentId);
+      return;
+    }
+
+    try {
+      setExplainLoadingId(appointmentId);
+      setShowExplainId(appointmentId);
+      const res = await fetch("/api/ai/prescription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prescription: planText }),
+      });
+
+      const data = await res.json();
+
+      if (data.error) {
+        toast.error(data.error);
+        setShowExplainId(null);
+        return;
+      }
+
+      setExplainResults(prev => ({ ...prev, [appointmentId]: data }));
+    } catch {
+      toast.error("Failed to decode prescription. Please try again.");
+      setShowExplainId(null);
+    } finally {
+      setExplainLoadingId(null);
+    }
+  };
+
   const sc: Record<string,string> = {
     PENDING_PAYMENT: "bg-amber-50 text-amber-600",
     CONFIRMED: "bg-emerald-50 text-emerald-600",
@@ -83,6 +135,8 @@ export default function AppointmentsPage() {
     COMPLETED: "bg-slate-100 text-slate-500",
     CANCELLED: "bg-red-50 text-red-500"
   };
+
+  const medIcons = ["💊", "💉", "🩹", "🧴", "🫁", "🧪"];
 
   return (
     <div>
@@ -159,12 +213,12 @@ export default function AppointmentsPage() {
                       </div>
                       
                       <div className="p-4 rounded-xl bg-white border border-slate-100 shadow-sm">
-                        <span className="text-xs font-bold uppercase tracking-wider text-amber-600">🩺 Assessment (Doctor's diagnosis)</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-amber-600">🩺 Assessment (Doctor&apos;s diagnosis)</span>
                         <p className="text-sm text-slate-600 mt-1 leading-relaxed">{soap.assessment}</p>
                       </div>
                       
                       <div className="p-4 rounded-xl bg-white border border-slate-100 shadow-sm">
-                        <span className="text-xs font-bold uppercase tracking-wider text-violet-600">📝 Plan & Prescriptions (Next steps)</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-violet-600">📝 Plan &amp; Prescriptions (Next steps)</span>
                         <p className="text-sm text-slate-600 mt-1 leading-relaxed">{soap.plan}</p>
                       </div>
 
@@ -172,6 +226,156 @@ export default function AppointmentsPage() {
                         <div className="col-span-full p-4 rounded-xl bg-violet-50/60 border border-violet-100/50 mt-1">
                           <span className="text-xs font-bold text-violet-700">📌 Overview Summary:</span>
                           <p className="text-sm text-slate-700 mt-1">{soap.summary}</p>
+                        </div>
+                      )}
+
+                      {/* Prescription Explainer Section */}
+                      {soap.plan && soap.plan !== "Not documented." && soap.plan !== "Not documented in this consultation." && (
+                        <div className="col-span-full mt-1">
+                          {/* Decode Button */}
+                          <Button
+                            className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-md hover:shadow-lg transition-all duration-200 font-medium h-11 text-sm rounded-xl"
+                            onClick={() => decodePrescription(apt.id, soap.plan)}
+                            disabled={explainLoadingId === apt.id}
+                          >
+                            {explainLoadingId === apt.id ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                Decoding your prescription...
+                              </>
+                            ) : showExplainId === apt.id && explainResults[apt.id] ? (
+                              <>
+                                <Pill className="h-4 w-4 mr-2" />
+                                Hide Prescription Details
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="h-4 w-4 mr-2" />
+                                💊 Decode &amp; Explain Prescription
+                              </>
+                            )}
+                          </Button>
+
+                          {/* Loading Skeleton */}
+                          {explainLoadingId === apt.id && (
+                            <div className="mt-4 space-y-3 animate-in fade-in duration-300">
+                              {[1, 2].map(i => (
+                                <div key={i} className="p-4 rounded-xl bg-white border border-teal-100 shadow-sm">
+                                  <div className="animate-pulse space-y-3">
+                                    <div className="h-4 bg-teal-100 rounded-full w-1/3"></div>
+                                    <div className="h-3 bg-slate-100 rounded-full w-full"></div>
+                                    <div className="h-3 bg-slate-100 rounded-full w-2/3"></div>
+                                    <div className="grid grid-cols-2 gap-3 mt-2">
+                                      <div className="h-3 bg-amber-50 rounded-full"></div>
+                                      <div className="h-3 bg-blue-50 rounded-full"></div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Decoded Prescription Results */}
+                          {showExplainId === apt.id && explainResults[apt.id] && !explainLoadingId && (
+                            <div className="mt-4 space-y-3 animate-in slide-in-from-top-2 fade-in duration-300">
+                              {/* Header */}
+                              <div className="flex items-center justify-between px-1">
+                                <div className="flex items-center gap-2">
+                                  <div className="h-6 w-6 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center">
+                                    <Pill className="h-3 w-3 text-white" />
+                                  </div>
+                                  <span className="text-xs font-bold uppercase tracking-wider text-teal-700">
+                                    Your Prescription Explained
+                                  </span>
+                                </div>
+                                <span className="text-[10px] font-bold text-teal-600 bg-teal-50 border border-teal-100 px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                                  <Sparkles className="h-2.5 w-2.5" /> AI Decoded
+                                </span>
+                              </div>
+
+                              {/* Medication Cards */}
+                              {explainResults[apt.id].medications.map((med, idx) => (
+                                <div
+                                  key={idx}
+                                  className="p-4 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 relative overflow-hidden"
+                                >
+                                  {/* Accent bar */}
+                                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-400 to-cyan-400 rounded-l-xl" />
+                                  
+                                  {/* Drug name + purpose */}
+                                  <div className="pl-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div>
+                                        <h5 className="font-semibold text-slate-800 text-sm flex items-center gap-2">
+                                          <span>{medIcons[idx % medIcons.length]}</span>
+                                          {med.name}
+                                        </h5>
+                                        <p className="text-xs text-teal-600 font-medium mt-0.5">{med.purpose}</p>
+                                      </div>
+                                      {med.dosage && med.dosage !== "N/A" && (
+                                        <span className="text-[10px] font-bold text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+                                          {med.dosage}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {/* Details grid */}
+                                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                      {/* Timing */}
+                                      <div className="flex items-start gap-2 p-2 rounded-lg bg-emerald-50/60 border border-emerald-100/60">
+                                        <Timer className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                                        <div>
+                                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">When to Take</span>
+                                          <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{med.timing}</p>
+                                        </div>
+                                      </div>
+
+                                      {/* Side Effects */}
+                                      <div className="flex items-start gap-2 p-2 rounded-lg bg-amber-50/60 border border-amber-100/60">
+                                        <AlertTriangle className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                                        <div>
+                                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Side Effects</span>
+                                          <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{med.sideEffects}</p>
+                                        </div>
+                                      </div>
+
+                                      {/* Advice */}
+                                      <div className="flex items-start gap-2 p-2 rounded-lg bg-blue-50/60 border border-blue-100/60">
+                                        <Lightbulb className="h-3.5 w-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
+                                        <div>
+                                          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600">Pro Tip</span>
+                                          <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{med.advice}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+
+                              {/* General Advice Footer */}
+                              {explainResults[apt.id].generalAdvice && (
+                                <div className="p-4 rounded-xl bg-gradient-to-r from-teal-50 via-cyan-50 to-sky-50 border border-teal-100/60 shadow-sm">
+                                  <div className="flex items-start gap-3">
+                                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                      <Heart className="h-4 w-4 text-white" />
+                                    </div>
+                                    <div>
+                                      <span className="text-xs font-bold uppercase tracking-wider text-teal-700">General Health Advice</span>
+                                      <p className="text-sm text-slate-600 mt-1 leading-relaxed">{explainResults[apt.id].generalAdvice}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Disclaimer */}
+                              <div className="flex items-center gap-2 px-1">
+                                <ShieldAlert className="h-3 w-3 text-slate-400 flex-shrink-0" />
+                                <p className="text-[10px] text-slate-400 leading-relaxed">
+                                  AI-generated explanation for your understanding. Always follow your doctor&apos;s exact instructions. If in doubt, consult your pharmacist.
+                                </p>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
