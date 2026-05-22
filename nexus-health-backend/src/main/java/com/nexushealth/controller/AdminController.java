@@ -66,6 +66,22 @@ public class AdminController {
         );
     }
 
+    @DeleteMapping("/users/{id}")
+    @org.springframework.transaction.annotation.Transactional
+    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable UUID id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Delete associated appointments first to avoid FK constraints
+        if (user.getRole() == com.nexushealth.entity.enums.Role.PATIENT) {
+            appointmentRepository.deleteAll(appointmentRepository.findByPatientId(id));
+        } else if (user.getRole() == com.nexushealth.entity.enums.Role.DOCTOR) {
+            appointmentRepository.deleteAll(appointmentRepository.findByDoctorId(id));
+        }
+        
+        userRepository.delete(user);
+        return ResponseEntity.ok(Map.of("message", "User and associated records deleted successfully"));
+    }
+
     @GetMapping("/doctors/pending")
     public ResponseEntity<List<DoctorResponse>> getPendingDoctors() {
         return ResponseEntity.ok(doctorService.getPendingDoctors());
