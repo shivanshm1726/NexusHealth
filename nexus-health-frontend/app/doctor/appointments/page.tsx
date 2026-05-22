@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import Link from "next/link";
 import {
   CalendarDays,
   Clock,
@@ -15,6 +16,7 @@ import {
   X,
   ClipboardList,
   AlertTriangle,
+  Video,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Client } from "@stomp/stompjs";
@@ -230,6 +232,18 @@ export default function DoctorAppointments() {
                       >
                         Complete
                       </Button>
+                    )}
+                    {apt.type === "ONLINE" && (apt.status === "CONFIRMED" || apt.status === "IN_PROGRESS") && (
+                      <Link
+                        href={`/consultation/${apt.id}`}
+                        className={buttonVariants({
+                          size: "sm",
+                          className: "bg-teal-600 hover:bg-teal-700 text-white shadow-sm font-medium",
+                        })}
+                      >
+                        <Video className="w-4 h-4 mr-2" />
+                        Join Call
+                      </Link>
                     )}
                     {(apt.status === "IN_PROGRESS" ||
                       apt.status === "COMPLETED") && (

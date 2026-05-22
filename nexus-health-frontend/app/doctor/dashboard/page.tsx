@@ -31,7 +31,7 @@ export default function DoctorDashboard() {
   const upcoming = a.filter(
     (x) =>
       x.appointmentDate >= todayStr &&
-      (x.status === "CONFIRMED" || x.status === "PENDING_PAYMENT"),
+      (x.status === "CONFIRMED" || x.status === "PENDING_PAYMENT" || x.status === "IN_PROGRESS"),
   );
   const completedAppts = a.filter((x) => x.status === "COMPLETED");
 
@@ -192,6 +192,18 @@ export default function DoctorDashboard() {
                     <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 font-medium">
                       {apt.status}
                     </span>
+                    {apt.status === "IN_PROGRESS" && (
+                      <Link
+                        href={`/consultation/${apt.id}`}
+                        className={buttonVariants({
+                          size: "sm",
+                          className: "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm font-medium",
+                        })}
+                      >
+                        <Video className="w-4 h-4 mr-2" />
+                        Join Call
+                      </Link>
+                    )}
                     {apt.status === "CONFIRMED" && apt.type === "ONLINE" && (
                       <Link
                         href={`/consultation/${apt.id}`}
