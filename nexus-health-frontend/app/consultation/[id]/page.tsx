@@ -116,6 +116,14 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
         await client.join(APP_ID, channel, token, uid);
         console.log("✅ Successfully joined Agora channel");
 
+        // Notify doctor that patient has joined
+        try {
+          await apiClient.post(`/appointments/${appointmentId}/notify-doctor`);
+          console.log("Notified doctor successfully");
+        } catch (e) {
+          console.error("Failed to notify doctor:", e);
+        }
+
         // Create and publish local tracks
         try {
           const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();

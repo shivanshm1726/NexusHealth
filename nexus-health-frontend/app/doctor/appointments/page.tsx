@@ -17,6 +17,9 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
+import { getWsUrl } from "@/lib/api";
 
 interface SOAPResult {
   subjective: string;
@@ -28,6 +31,7 @@ interface SOAPResult {
 
 export default function DoctorAppointments() {
   const [a, setA] = useState<any[]>([]);
+  const [waitingPatients, setWaitingPatients] = useState<Record<string, boolean>>({});
 
   // AI Scribe state
   const [activeScribeId, setActiveScribeId] = useState<string | null>(null);
@@ -68,6 +72,27 @@ export default function DoctorAppointments() {
         setA(sorted);
       })
       .catch(() => {});
+
+    // Establish WebSocket Connection for Real-Time Waiting Room Notifications
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    const client = new Client({
+      webSocketFactory: () => new SockJS(getWsUrl()),
+      connectHeaders: { Authorization: `Bearer ${token}` },
+      onConnect: () => {
+        client.subscribe("/user/queue/notifications", (message) => {
+          const notification = JSON.parse(message.body);
+          if (notification.type === "WAITING_ROOM_JOIN") {
+            toast.success(`⚡ ${notification.message}`, { duration: 6000 });
+            setWaitingPatients(prev => ({ ...prev, [notification.appointmentId]: true }));
+          }
+        });
+      }
+    });
+    client.activate();
+
+    return () => { client.deactivate(); };
   }, []);
 
   const upd = async (id: string, s: string) => {
@@ -177,6 +202,12 @@ export default function DoctorAppointments() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    {waitingPatients[apt.id] && (
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100 animate-pulse">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        Patient Waiting
+                      </span>
+                    )}
                     <Badge
                       className={`${sc[apt.status] || ""} border-0 font-medium`}
                     >
