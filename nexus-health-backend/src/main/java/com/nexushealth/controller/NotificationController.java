@@ -32,6 +32,7 @@ public class NotificationController {
     }
 
     @PostMapping("/{id}/notify-doctor")
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<?> notifyDoctorPatientJoined(@PathVariable UUID id) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
