@@ -199,9 +199,7 @@ export default function AdminAppointments() {
             </div>
           </div>
           <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
+            <Button variant="outline" onClick={() => setIsReassignOpen(false)}>Cancel</Button>
             <Button onClick={handleReassign} className="bg-slate-900 text-white hover:bg-slate-800">
               Confirm Reassignment
             </Button>
