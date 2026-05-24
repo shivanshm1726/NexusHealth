@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import apiClient from "@/lib/api";
-import { Loader2, Mic, MicOff, Video, VideoOff, PhoneOff, UserRound } from "lucide-react";
+import { Loader2, Mic, MicOff, Video, VideoOff, PhoneOff, UserRound, PhoneCall } from "lucide-react";
 import AgoraRTC, {
   IAgoraRTCClient,
   IAgoraRTCRemoteUser,
@@ -23,130 +23,109 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
   const { user } = useAuth();
   const router = useRouter();
 
-  const [token, setToken] = useState("");
-  const [channel, setChannel] = useState("");
-  const [uid, setUid] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [joined, setJoined] = useState(false);
+  const [left, setLeft] = useState(false); // tracks if user has left the call
 
   // Agora state
   const clientRef = useRef<IAgoraRTCClient | null>(null);
   const localVideoTrackRef = useRef<ICameraVideoTrack | null>(null);
   const localAudioTrackRef = useRef<IMicrophoneAudioTrack | null>(null);
-  const joinedRef = useRef(false);
 
   const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [localVideoReady, setLocalVideoReady] = useState(false);
 
-  // Fetch token from backend
-  useEffect(() => {
-    if (!user) return;
-    apiClient
-      .get(`/consultations/video-token/${appointmentId}`)
-      .then((res) => {
-        console.log("Token fetched:", { channel: res.data.channelName, uid: res.data.uid });
-        setToken(res.data.token);
-        setChannel(res.data.channelName);
-        setUid(res.data.uid);
-      })
-      .catch((err) => {
-        console.error("Error fetching token:", err);
-        setError("You are not authorized to join this call or it does not exist.");
+  // Core join function — can be called multiple times (initial + rejoin)
+  const joinCall = useCallback(async () => {
+    if (!user || !APP_ID) return;
+
+    setError("");
+    setLeft(false);
+    setJoined(false);
+    setRemoteUsers([]);
+    setLocalVideoReady(false);
+    setMicOn(true);
+    setCamOn(true);
+
+    try {
+      // 1. Fetch a fresh token every time we join
+      const res = await apiClient.get(`/consultations/video-token/${appointmentId}`);
+      const { token, channelName, uid } = res.data;
+      console.log("Token fetched:", { channel: channelName, uid });
+
+      // 2. Create a fresh Agora client
+      const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+      clientRef.current = client;
+
+      // 3. Register event handlers BEFORE joining
+      client.on("user-published", async (remoteUser: IAgoraRTCRemoteUser, mediaType: "audio" | "video") => {
+        console.log(`>>> Remote user published: UID=${remoteUser.uid}, type=${mediaType}`);
+        await client.subscribe(remoteUser, mediaType);
+
+        if (mediaType === "video") {
+          setRemoteUsers((prev) => {
+            const filtered = prev.filter((u) => u.uid !== remoteUser.uid);
+            return [...filtered, remoteUser];
+          });
+        }
+        if (mediaType === "audio") {
+          remoteUser.audioTrack?.play();
+        }
       });
+
+      client.on("user-unpublished", (remoteUser: IAgoraRTCRemoteUser, mediaType: "audio" | "video") => {
+        if (mediaType === "video") {
+          setRemoteUsers((prev) => prev.filter((u) => u.uid !== remoteUser.uid));
+        }
+      });
+
+      client.on("user-left", (remoteUser: IAgoraRTCRemoteUser) => {
+        setRemoteUsers((prev) => prev.filter((u) => u.uid !== remoteUser.uid));
+      });
+
+      client.on("connection-state-change", (curState, prevState) => {
+        console.log(`>>> Connection state: ${prevState} -> ${curState}`);
+      });
+
+      // 4. Join the channel
+      console.log(`Joining channel: ${channelName} with UID: ${uid}`);
+      await client.join(APP_ID, channelName, token, uid);
+      console.log("✅ Successfully joined Agora channel");
+
+      // 5. Notify doctor that patient has joined
+      try {
+        await apiClient.post(`/appointments/${appointmentId}/notify-doctor`);
+        console.log("Notified doctor successfully");
+      } catch (e) {
+        console.error("Failed to notify doctor:", e);
+      }
+
+      // 6. Create and publish local tracks
+      try {
+        const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+        localAudioTrackRef.current = audioTrack;
+        localVideoTrackRef.current = videoTrack;
+
+        await client.publish([audioTrack, videoTrack]);
+        console.log("✅ Published local audio + video tracks");
+        setLocalVideoReady(true);
+      } catch (mediaErr: any) {
+        console.warn("Camera/mic not available, joining without media:", mediaErr.message);
+      }
+
+      setJoined(true);
+    } catch (err: any) {
+      console.error("Failed to join:", err);
+      setError("Failed to connect to the video call: " + (err.message || err));
+    }
   }, [appointmentId, user]);
 
-  // Join Agora channel
+  // Auto-join on mount
   useEffect(() => {
-    if (!token || !channel || uid === null || !APP_ID) return;
-    
-    // Prevent double-join in strict mode
-    if (joinedRef.current) return;
-    joinedRef.current = true;
-
-    const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-    clientRef.current = client;
-
-    const handleUserPublished = async (remoteUser: IAgoraRTCRemoteUser, mediaType: "audio" | "video") => {
-      console.log(`>>> Remote user published: UID=${remoteUser.uid}, type=${mediaType}`);
-      await client.subscribe(remoteUser, mediaType);
-      console.log(`>>> Subscribed to remote user: UID=${remoteUser.uid}, type=${mediaType}`);
-
-      if (mediaType === "video") {
-        setRemoteUsers((prev) => {
-          const filtered = prev.filter((u) => u.uid !== remoteUser.uid);
-          return [...filtered, remoteUser];
-        });
-      }
-      if (mediaType === "audio") {
-        remoteUser.audioTrack?.play();
-      }
-    };
-
-    const handleUserUnpublished = (remoteUser: IAgoraRTCRemoteUser, mediaType: "audio" | "video") => {
-      console.log(`>>> Remote user unpublished: UID=${remoteUser.uid}, type=${mediaType}`);
-      if (mediaType === "video") {
-        setRemoteUsers((prev) => prev.filter((u) => u.uid !== remoteUser.uid));
-      }
-    };
-
-    const handleUserJoined = (remoteUser: IAgoraRTCRemoteUser) => {
-      console.log(`>>> Remote user JOINED channel: UID=${remoteUser.uid}`);
-    };
-
-    const handleUserLeft = (remoteUser: IAgoraRTCRemoteUser) => {
-      console.log(`>>> Remote user LEFT channel: UID=${remoteUser.uid}`);
-      setRemoteUsers((prev) => prev.filter((u) => u.uid !== remoteUser.uid));
-    };
-
-    // Register event handlers BEFORE joining
-    client.on("user-published", handleUserPublished);
-    client.on("user-unpublished", handleUserUnpublished);
-    client.on("user-joined", handleUserJoined);
-    client.on("user-left", handleUserLeft);
-
-    client.on("connection-state-change", (curState, prevState) => {
-      console.log(`>>> Connection state: ${prevState} -> ${curState}`);
-    });
-
-    const joinChannel = async () => {
-      try {
-        console.log(`Joining channel: ${channel} with UID: ${uid}`);
-        await client.join(APP_ID, channel, token, uid);
-        console.log("✅ Successfully joined Agora channel");
-
-        // Notify doctor that patient has joined
-        try {
-          await apiClient.post(`/appointments/${appointmentId}/notify-doctor`);
-          console.log("Notified doctor successfully");
-        } catch (e) {
-          console.error("Failed to notify doctor:", e);
-        }
-
-        // Create and publish local tracks
-        try {
-          const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
-          localAudioTrackRef.current = audioTrack;
-          localVideoTrackRef.current = videoTrack;
-
-          await client.publish([audioTrack, videoTrack]);
-          console.log("✅ Published local audio + video tracks");
-
-          setLocalVideoReady(true);
-        } catch (mediaErr: any) {
-          console.warn("Camera/mic not available, joining without media:", mediaErr.message);
-          // Still allow joining even without camera/mic
-        }
-
-        setJoined(true);
-      } catch (err: any) {
-        console.error("Failed to join Agora channel:", err);
-        setError("Failed to connect to the video call: " + (err.message || err));
-      }
-    };
-
-    joinChannel();
+    if (!user) return;
+    joinCall();
 
     // Cleanup on unmount
     return () => {
@@ -155,15 +134,18 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
         localVideoTrackRef.current?.close();
         localAudioTrackRef.current = null;
         localVideoTrackRef.current = null;
-        if (client.connectionState === "CONNECTED" || client.connectionState === "CONNECTING") {
-          await client.leave();
+        if (clientRef.current) {
+          const state = clientRef.current.connectionState;
+          if (state === "CONNECTED" || state === "CONNECTING") {
+            await clientRef.current.leave();
+          }
+          clientRef.current.removeAllListeners();
+          clientRef.current = null;
         }
-        client.removeAllListeners();
-        joinedRef.current = false;
       };
       cleanup();
     };
-  }, [token, channel, uid]);
+  }, [user, joinCall]);
 
   const toggleMic = useCallback(() => {
     if (localAudioTrackRef.current) {
@@ -180,14 +162,27 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
   }, [camOn]);
 
   const leaveCall = useCallback(async () => {
+    // Close local tracks
     localAudioTrackRef.current?.close();
     localVideoTrackRef.current?.close();
     localAudioTrackRef.current = null;
     localVideoTrackRef.current = null;
+
+    // Leave Agora channel
     if (clientRef.current?.connectionState === "CONNECTED") {
       await clientRef.current.leave();
     }
-    joinedRef.current = false;
+    clientRef.current?.removeAllListeners();
+    clientRef.current = null;
+
+    // Reset UI state — show the "Rejoin" screen instead of navigating away
+    setJoined(false);
+    setLeft(true);
+    setRemoteUsers([]);
+    setLocalVideoReady(false);
+  }, []);
+
+  const goBack = useCallback(() => {
     router.back();
   }, [router]);
 
@@ -198,7 +193,7 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
           <div className="text-red-500 text-xl font-bold">Access Denied</div>
           <p className="text-gray-400">{error}</p>
           <button
-            onClick={() => router.back()}
+            onClick={goBack}
             className="px-6 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition"
           >
             Go Back
@@ -208,6 +203,35 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
     );
   }
 
+  // Show "Rejoin" screen after leaving the call
+  if (left && !joined) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center bg-gray-900 text-white gap-6">
+        <div className="text-center space-y-2">
+          <PhoneOff className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold">You left the call</h2>
+          <p className="text-gray-400">You can rejoin at any time until the appointment is completed.</p>
+        </div>
+        <div className="flex gap-4">
+          <button
+            onClick={joinCall}
+            className="flex items-center gap-2 px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-emerald-900/30 hover:scale-105"
+          >
+            <PhoneCall className="w-5 h-5" />
+            Rejoin Call
+          </button>
+          <button
+            onClick={goBack}
+            className="px-8 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl font-medium transition"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading / connecting state
   if (!joined) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-gray-900 text-white">
@@ -240,7 +264,6 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
           <div className="text-gray-400 flex flex-col items-center">
             <Loader2 className="w-12 h-12 animate-spin mb-4 text-gray-600" />
             <p>Waiting for the other person to join...</p>
-            <p className="text-xs text-gray-600 mt-2">Channel: {channel}</p>
           </div>
         )}
 
