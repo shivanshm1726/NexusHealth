@@ -14,10 +14,12 @@ import {
   IndianRupee,
   TrendingUp,
 } from "lucide-react";
+import { useNotification } from "@/contexts/NotificationContext";
 
 export default function DoctorDashboard() {
   const { user } = useAuth();
   const [a, setA] = useState<any[]>([]);
+  const { waitingPatients } = useNotification();
 
   useEffect(() => {
     api
@@ -189,6 +191,12 @@ export default function DoctorDashboard() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
+                    {waitingPatients[apt.id] && (
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100 animate-pulse">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        Patient Waiting
+                      </span>
+                    )}
                     <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 font-medium">
                       {apt.status}
                     </span>

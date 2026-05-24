@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { getWsUrl } from "@/lib/api";
+import { useNotification } from "@/contexts/NotificationContext";
 
 interface SOAPResult {
   subjective: string;
@@ -33,7 +34,7 @@ interface SOAPResult {
 
 export default function DoctorAppointments() {
   const [a, setA] = useState<any[]>([]);
-  const [waitingPatients, setWaitingPatients] = useState<Record<string, boolean>>({});
+  const { waitingPatients } = useNotification();
 
   // AI Scribe state
   const [activeScribeId, setActiveScribeId] = useState<string | null>(null);
@@ -74,27 +75,6 @@ export default function DoctorAppointments() {
         setA(sorted);
       })
       .catch(() => {});
-
-    // Establish WebSocket Connection for Real-Time Waiting Room Notifications
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-
-    const client = new Client({
-      webSocketFactory: () => new SockJS(getWsUrl()),
-      connectHeaders: { Authorization: `Bearer ${token}` },
-      onConnect: () => {
-        client.subscribe("/user/queue/notifications", (message) => {
-          const notification = JSON.parse(message.body);
-          if (notification.type === "WAITING_ROOM_JOIN") {
-            toast.success(`⚡ ${notification.message}`, { duration: 6000 });
-            setWaitingPatients(prev => ({ ...prev, [notification.appointmentId]: true }));
-          }
-        });
-      }
-    });
-    client.activate();
-
-    return () => { client.deactivate(); };
   }, []);
 
   const upd = async (id: string, s: string) => {

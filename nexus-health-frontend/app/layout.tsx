@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   // Using a placeholder Client ID if NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set
@@ -22,8 +23,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${font.variable} font-sans antialiased bg-background text-foreground`}>
         <GoogleOAuthProvider clientId={clientId}>
           <AuthProvider>
-            {children}
-            <Toaster richColors position="top-right" />
+            <NotificationProvider>
+              {children}
+              <Toaster richColors position="top-right" />
+            </NotificationProvider>
           </AuthProvider>
         </GoogleOAuthProvider>
       </body>
