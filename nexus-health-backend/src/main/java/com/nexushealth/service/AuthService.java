@@ -48,6 +48,9 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
 
+    @org.springframework.beans.factory.annotation.Value("${app.google.client-id}")
+    private String googleClientId;
+
     public AuthService(UserRepository userRepository,
                        DoctorProfileRepository doctorProfileRepository,
                        PatientProfileRepository patientProfileRepository,
@@ -181,7 +184,7 @@ public class AuthService {
             // Note: In production, verify the audience matches your actual client ID
             com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier verifier = 
                 new com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier.Builder(transport, jsonFactory)
-                // .setAudience(Collections.singletonList("YOUR_GOOGLE_CLIENT_ID"))
+                .setAudience(java.util.Collections.singletonList(googleClientId))
                 .build();
 
             com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = verifier.verify(idTokenString);

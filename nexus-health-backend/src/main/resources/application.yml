@@ -38,6 +38,8 @@ app:
     secret: ${JWT_SECRET:nexushealth-dev-secret-key-change-in-production-minimum-256-bits-long}
     access-token-expiration-ms: 900000 # 15 minutes
     refresh-token-expiration-ms: 604800000 # 7 days
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:282914600614-i7f7484eojmst2b0hbf61dgq7s7kojrh.apps.googleusercontent.com}
 
 # Razorpay Configuration
 razorpay:
