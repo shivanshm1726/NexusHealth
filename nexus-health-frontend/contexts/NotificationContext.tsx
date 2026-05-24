@@ -54,6 +54,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             toast.success(`⚡ ${wp.message}`, { duration: 10000 });
           }
         }
+
+        // Clear notifiedRef for patients who left, so rejoining triggers a new toast
+        for (const id of notifiedRef.current) {
+          if (!newWaiting[id]) {
+            notifiedRef.current.delete(id);
+          }
+        }
+
         setWaitingPatients(newWaiting);
       } catch (e) {
         // Silently ignore polling errors

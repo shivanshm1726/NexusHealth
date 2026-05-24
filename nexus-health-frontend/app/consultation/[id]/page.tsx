@@ -175,12 +175,19 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
     clientRef.current?.removeAllListeners();
     clientRef.current = null;
 
+    // Clear the "patient waiting" flag so doctor's dashboard updates
+    try {
+      await apiClient.post(`/appointments/${appointmentId}/clear-waiting`);
+    } catch (e) {
+      // ignore
+    }
+
     // Reset UI state — show the "Rejoin" screen instead of navigating away
     setJoined(false);
     setLeft(true);
     setRemoteUsers([]);
     setLocalVideoReady(false);
-  }, []);
+  }, [appointmentId]);
 
   const goBack = useCallback(() => {
     router.back();
