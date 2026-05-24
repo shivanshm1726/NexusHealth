@@ -145,11 +145,40 @@ public class AppointmentService {
         appointmentRepository.save(apt);
     }
 
+    @Transactional
+    public void reassignAppointment(UUID id, UUID newDoctorId) {
+        Appointment apt = appointmentRepository
+            .findById(id)
+            .orElseThrow(() ->
+                new ResourceNotFoundException("Appointment", "id", id)
+            );
+        User newDoctor = userRepository
+            .findById(newDoctorId)
+            .orElseThrow(() ->
+                new ResourceNotFoundException("Doctor", "id", newDoctorId)
+            );
+
+        if (
+            appointmentRepository.existsByDoctorIdAndAppointmentDateAndTimeSlotAndStatusNot(
+                newDoctorId,
+                apt.getAppointmentDate(),
+                apt.getTimeSlot(),
+                AppointmentStatus.CANCELLED
+            )
+        ) {
+            throw new BadRequestException("The new doctor is already booked for this slot");
+        }
+
+        apt.setDoctor(newDoctor);
+        appointmentRepository.save(apt);
+    }
+
     private Map<String, Object> toMap(Appointment a) {
         Map<String, Object> m = new HashMap<>();
         m.put("id", a.getId());
         m.put("patientId", a.getPatient().getId());
         m.put("doctorId", a.getDoctor().getId());
+        m.put("doctorName", a.getDoctor().getFullName());
         m.put("patientName", a.getPatient().getFullName());
         m.put("appointmentDate", a.getAppointmentDate());
         m.put("timeSlot", a.getTimeSlot());
