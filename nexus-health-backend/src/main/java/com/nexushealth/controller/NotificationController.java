@@ -48,7 +48,11 @@ public class NotificationController {
                 .orElseThrow(() -> new RuntimeException("Doctor not found"));
 
         List<Appointment> waitingAppointments = appointmentRepository
-                .findByDoctorIdAndPatientJoinedTrue(doctor.getId());
+                .findByDoctorIdAndPatientJoinedTrue(doctor.getId())
+                .stream()
+                .filter(a -> a.getStatus() != com.nexushealth.entity.enums.AppointmentStatus.COMPLETED 
+                          && a.getStatus() != com.nexushealth.entity.enums.AppointmentStatus.CANCELLED)
+                .toList();
 
         List<Map<String, Object>> result = new ArrayList<>();
         for (Appointment apt : waitingAppointments) {
