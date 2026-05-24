@@ -34,4 +34,7 @@ public interface AppointmentRepository
         "SELECT COALESCE(SUM(a.amount), 0) FROM Appointment a WHERE a.status = 'COMPLETED'"
     )
     BigDecimal getTotalRevenue();
+
+    /** Find appointments where the patient has joined the video call waiting room. */
+    List<Appointment> findByDoctorIdAndPatientJoinedTrue(UUID doctorId);
 }

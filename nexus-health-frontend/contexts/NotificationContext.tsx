@@ -1,11 +1,15 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
-import { getWsUrl } from "@/lib/api";
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
+import api from "@/lib/api";
 import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
+
+interface WaitingPatient {
+  appointmentId: string;
+  patientName: string;
+  message: string;
+}
 
 interface NotificationContextType {
   waitingPatients: Record<string, boolean>;
@@ -17,57 +21,54 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuth();
   const [waitingPatients, setWaitingPatients] = useState<Record<string, boolean>>({});
+  const notifiedRef = useRef<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (!isAuthenticated || user?.role !== "DOCTOR") return;
-
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-
-    const client = new Client({
-      webSocketFactory: () => new SockJS(getWsUrl()),
-      connectHeaders: { Authorization: `Bearer ${token}` },
-      debug: (str) => {
-        console.log("STOMP: " + str);
-      },
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-      onConnect: () => {
-        console.log("✅ STOMP WebSocket Connected globally");
-        client.subscribe(`/topic/doctor.${user.id}.notifications`, (message) => {
-          console.log("🔔 Received STOMP message:", message.body);
-          try {
-            const notification = JSON.parse(message.body);
-            if (notification.type === "WAITING_ROOM_JOIN") {
-              toast.success(`⚡ ${notification.message}`, { duration: 8000 });
-              setWaitingPatients((prev) => ({ ...prev, [notification.appointmentId]: true }));
-            }
-          } catch (e) {
-            console.error("Failed to parse notification", e);
-          }
-        });
-      },
-      onStompError: (frame) => {
-        console.error("Broker reported error: " + frame.headers["message"]);
-        console.error("Additional details: " + frame.body);
-      },
-    });
-
-    client.activate();
-
-    return () => {
-      client.deactivate();
-    };
-  }, [user, isAuthenticated]);
-
-  const clearWaitingPatient = (appointmentId: string) => {
+  const clearWaitingPatient = useCallback((appointmentId: string) => {
     setWaitingPatients((prev) => {
       const next = { ...prev };
       delete next[appointmentId];
       return next;
     });
-  };
+    notifiedRef.current.delete(appointmentId);
+    // Also clear the flag in the backend
+    api.post(`/appointments/${appointmentId}/clear-waiting`).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== "DOCTOR") return;
+
+    let active = true;
+
+    const poll = async () => {
+      try {
+        const { data } = await api.get("/appointments/waiting-patients");
+        if (!active) return;
+
+        const newWaiting: Record<string, boolean> = {};
+        for (const wp of data as WaitingPatient[]) {
+          newWaiting[wp.appointmentId] = true;
+
+          // Show toast only for newly detected waiting patients
+          if (!notifiedRef.current.has(wp.appointmentId)) {
+            notifiedRef.current.add(wp.appointmentId);
+            toast.success(`⚡ ${wp.message}`, { duration: 10000 });
+          }
+        }
+        setWaitingPatients(newWaiting);
+      } catch (e) {
+        // Silently ignore polling errors
+      }
+    };
+
+    // Poll immediately, then every 5 seconds
+    poll();
+    const interval = setInterval(poll, 5000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [user, isAuthenticated]);
 
   return (
     <NotificationContext.Provider value={{ waitingPatients, clearWaitingPatient }}>

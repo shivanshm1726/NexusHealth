@@ -37,6 +37,10 @@ public class Appointment {
     @Column(columnDefinition = "TEXT") private String notes;
     @Column(precision = 10, scale = 2) private BigDecimal amount;
 
+    @Column(name = "patient_joined", nullable = false)
+    @Builder.Default
+    private Boolean patientJoined = false;
+
     @Column(name = "created_at", updatable = false) private LocalDateTime createdAt;
     @Column(name = "updated_at") private LocalDateTime updatedAt;
 
