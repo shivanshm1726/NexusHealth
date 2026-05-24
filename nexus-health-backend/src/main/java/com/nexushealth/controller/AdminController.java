@@ -36,16 +36,18 @@ public class AdminController {
 
     @GetMapping("/dashboard")
     public ResponseEntity<Map<String, Object>> dashboard() {
+        List<Map<String, Object>> revenueByDoctor = new ArrayList<>();
+        for (Object[] row : appointmentRepository.getRevenueByDoctorRaw()) {
+            revenueByDoctor.add(Map.of("doctorName", row[0], "revenue", row[1]));
+        }
+
         return ResponseEntity.ok(
             Map.of(
-                "users",
-                userRepository.count(),
-                "doctors",
-                doctorService.getApprovedDoctors().size(),
-                "appointments",
-                appointmentRepository.count(),
-                "revenue",
-                appointmentRepository.getTotalRevenue()
+                "users", userRepository.count(),
+                "doctors", doctorService.getApprovedDoctors().size(),
+                "appointments", appointmentRepository.count(),
+                "revenue", appointmentRepository.getTotalRevenue(),
+                "revenueByDoctor", revenueByDoctor
             )
         );
     }

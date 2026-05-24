@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Stethoscope, CalendarDays, IndianRupee } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function AdminDashboard() {
   const [s, setS] = useState({
@@ -10,6 +11,7 @@ export default function AdminDashboard() {
     doctors: 0,
     appointments: 0,
     revenue: 0,
+    revenueByDoctor: [],
   });
 
   useEffect(() => {
@@ -34,7 +36,7 @@ export default function AdminDashboard() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-slate-900 mb-8">Admin Dashboard</h1>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((c) => (
           <Card key={c.l} className="bg-white border-slate-200/80 shadow-sm">
             <CardContent className="p-6">
@@ -46,6 +48,46 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="bg-white border-slate-200/80 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg text-slate-900">Revenue by Doctor</CardTitle>
+          </CardHeader>
+          <CardContent className="h-80">
+            {s.revenueByDoctor?.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={s.revenueByDoctor} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis 
+                    dataKey="doctorName" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#64748b', fontSize: 12 }} 
+                    dy={10} 
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#64748b', fontSize: 12 }} 
+                    tickFormatter={(value) => `₹${value}`}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: '#f8fafc' }} 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    formatter={(value: number) => [`₹${value.toLocaleString("en-IN")}`, 'Revenue']}
+                  />
+                  <Bar dataKey="revenue" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-400">
+                No revenue data available yet.
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
