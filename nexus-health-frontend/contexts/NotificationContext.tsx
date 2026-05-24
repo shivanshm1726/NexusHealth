@@ -35,7 +35,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       heartbeatOutgoing: 4000,
       onConnect: () => {
         console.log("✅ STOMP WebSocket Connected globally");
-        client.subscribe("/user/queue/notifications", (message) => {
+        client.subscribe(`/topic/doctor.${user.id}.notifications`, (message) => {
           console.log("🔔 Received STOMP message:", message.body);
           try {
             const notification = JSON.parse(message.body);

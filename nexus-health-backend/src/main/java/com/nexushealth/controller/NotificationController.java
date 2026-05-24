@@ -46,10 +46,9 @@ public class NotificationController {
         notification.setMessage("Patient " + patient.getFullName() + " has joined the virtual waiting room.");
         notification.setType("WAITING_ROOM_JOIN");
 
-        // Send to doctor: User destinations are routed via username (email)
-        messagingTemplate.convertAndSendToUser(
-                doctor.getEmail(),
-                "/queue/notifications",
+        // Send to doctor: Use direct topic routing to bypass complex Principal resolution in production
+        messagingTemplate.convertAndSend(
+                "/topic/doctor." + doctor.getId() + ".notifications",
                 notification
         );
 
